@@ -194,7 +194,7 @@ tests.append(("(+ 2 -10)", '-8', '+ for 2 constant args (integers)'))
 tests.append(("(+ 4/16)", '1/4', '+ for 1 constant args (fractions) (with minimization)'))
 tests.append(("(+ 1/2 1/4)", '3/4', '+ for 2 constant args (fractions)'))
 tests.append(("(+ 1/2 -1/4)", '1/4', '+ for 2 constant args (fractions)'))
-tests.append(("(+ 1/2 -2 3/2 5 10)", '15', '+ for 5 constant args (mixed)'))
+tests.append(("(+ 1/2 -2 3/2 5 10)", ['15', '15/1'] , '+ for 5 constant args (mixed)'))
 
 tests.append(('*',))
 tests.append(("(*)", '1', '* for no args'))
@@ -204,7 +204,7 @@ tests.append(("(* 2 -10)", '-20', '* for 2 constant args (integers)'))
 tests.append(("(* 4/16)", '1/4', '* for 1 constant args (fractions) (with minimization)'))
 tests.append(("(* 1/2 1/4)", '1/8', '* for 2 constant args (fractions)'))
 tests.append(("(* 1/2 -1/4)", '-1/8', '* for 2 constant args (fractions)'))
-tests.append(("(* 1/2 -2 3/2 5 10)", '-75', '* for 5 constant args (mixed)'))
+tests.append(("(* 1/2 -2 3/2 5 10)", ['-75' , '-75/1'], '* for 5 constant args (mixed)'))
 
 tests.append(('char->integer',))
 tests.append((r"(char->integer #\a)", '97', 'get ascii value of a'))
@@ -481,7 +481,8 @@ for t in tests:
   compile_scheme_file(tmpSourceFile, tmpTargetFile)
   output = getoutput('make ' + srcNoExt + ' > /dev/null && ./' + srcNoExt)
 
-  if str(output).lower() == str(expected_output).lower():
+  if type(expected_output) is list and str(output).lower() in expected_output \
+  			or str(output).lower() == str(expected_output).lower():
     print("Success")
   else:
     failedTestStr = "%d. Test: %s\nGot:\n%s\nExpected:\n%s" % (test, scheme_code, output, expected_output)
