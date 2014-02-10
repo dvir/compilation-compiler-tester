@@ -197,7 +197,7 @@ tests.append(("(+ 4/16)", ['1/4','4/16'], '+ for 1 constant args (fractions) (wi
 tests.append(("(+ 1/2 1/4)", ['3/4','6/8'], '+ for 2 constant args (fractions)'))
 tests.append(("(+ 1/2 -1/4)", ['1/4','2/8'], '+ for 2 constant args (fractions)'))
 tests.append(("(+ 1/2 -2 3/2 5 10)", ['15', '15/1','60/4'] , '+ for 5 constant args (mixed)'))
-
+tests.append(("(= 2/3 (+ 1/3 1/3))", '#t', '= and + on fractions'))
 tests.append(('*',))
 tests.append(("(*)", '1', '* for no args'))
 tests.append(("(* 2)", '2', '* for 1 constant args (integers)'))
@@ -259,7 +259,6 @@ tests.append(("(eq? '() (cdr '(5)))", '#t', 'cdr of a one-element list should be
 tests.append(("(eq? 0 0)", '#t', 'eq of two integers'))
 tests.append(("(eq? #f #f)", '#t', 'eq of two booleans'))
 tests.append(("(eq? 1/2 1/2)", '#t', 'eq of two fractions'))
-tests.append(("(eq? 2/3 (+ 1/3 1/3))", '#t', 'eq of two fractions'))
 tests.append(("(eq? '(1 2) '(1 2))", '#t', 'eq of two constant lists'))
 tests.append(("(eq? (list 1 2) (list 1 2))", '#f', 'eq of two dynamic lists'))
 tests.append(("(eq? car car)", '#t', 'eq of two (same) procedures'))
