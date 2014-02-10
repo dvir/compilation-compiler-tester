@@ -194,9 +194,9 @@ tests.append(("(+ 2)", '2', '+ for 1 constant args (integers)'))
 tests.append(("(+ 2 10)", '12', '+ for 2 constant args (integers)'))
 tests.append(("(+ 2 -10)", '-8', '+ for 2 constant args (integers)'))
 tests.append(("(+ 4/16)", '1/4', '+ for 1 constant args (fractions) (with minimization)'))
-tests.append(("(+ 1/2 1/4)", '3/4', '+ for 2 constant args (fractions)'))
-tests.append(("(+ 1/2 -1/4)", '1/4', '+ for 2 constant args (fractions)'))
-tests.append(("(+ 1/2 -2 3/2 5 10)", ['15', '15/1'] , '+ for 5 constant args (mixed)'))
+tests.append(("(+ 1/2 1/4)", ['3/4','6/8'], '+ for 2 constant args (fractions)'))
+tests.append(("(+ 1/2 -1/4)", ['1/4','2/8'], '+ for 2 constant args (fractions)'))
+tests.append(("(+ 1/2 -2 3/2 5 10)", ['15', '15/1','60/4'] , '+ for 5 constant args (mixed)'))
 
 tests.append(('*',))
 tests.append(("(*)", '1', '* for no args'))
@@ -206,7 +206,7 @@ tests.append(("(* 2 -10)", '-20', '* for 2 constant args (integers)'))
 tests.append(("(* 4/16)", '1/4', '* for 1 constant args (fractions) (with minimization)'))
 tests.append(("(* 1/2 1/4)", '1/8', '* for 2 constant args (fractions)'))
 tests.append(("(* 1/2 -1/4)", '-1/8', '* for 2 constant args (fractions)'))
-tests.append(("(* 1/2 -2 3/2 5 10)", ['-75' , '-75/1'], '* for 5 constant args (mixed)'))
+tests.append(("(* 1/2 -2 3/2 5 10)", ['-75' , '-75/1','-300/4'], '* for 5 constant args (mixed)'))
 
 tests.append(('char->integer',))
 tests.append((r"(char->integer #\a)", '97', 'get ascii value of a'))
@@ -410,7 +410,7 @@ tests.append(("""
   (cond ((null? l) 'done)
         ((null? (cdr l)) 'done)
         ((<= (car l) (car (cdr l))) (pivot (cdr l)))
-        (#t (car l))
+        (else (car l))
   )
 ))
 
@@ -428,6 +428,736 @@ tests.append(("""
 
 (quicksort '(3 8 5 4 8 2 4 1 9 4))
 """, '(1 . (2 . (3 . (4 . (4 . (4 . (5 . (8 . (8 . (9 . ()))))))))))', 'quicksort'))
+
+
+tests.append(('additional by kobi tests',))
+
+tests.append(("""
+'(a (+ 1 2) c)
+`(a (+ 1 2) c)
+`(a ,(+ 1 2) c)
+(define fact 
+        (lambda (n)
+                (if (zero? n)
+                1
+                `(* ,n ,(fact (- n 1))))))
+(fact 4)
+((lambda (x) `(,x ',x)) '(lambda (x) `(,x',x)))
+`','moshe
+(define (reverse1 lis)
+        (if (null? lis)
+        '()
+        (append (reverse1 (cdr lis)) (list (car lis)))))
+`(a ,(reverse1 '(x y z)) b)
+`(a ,@(reverse1 '(x y z)) b)
+(define a 1) 
+(define b 2)
+(define c '(x y z))
+(define d '(u v w))
+'(a b c)
+`(,a b ,c)
+`(q r ,a ,b s t ,@c ,d)
+`(,@2)
+""", """(A . ((+ . (1 . (2 . ()))) . (C . ())))
+(A . ((+ . (1 . (2 . ()))) . (C . ())))
+(A . (3 . (C . ())))
+(* . (4 . ((* . (3 . ((* . (2 . ((* . (1 . (1 . ()))) . ()))) . ()))) . ())))
+((LAMBDA . ((X . ()) . ((QUASIQUOTE . (((UNQUOTE . (X . ())) . ((QUOTE . ((UNQUOTE . (X . ())) . ())) . ())) . ())) . ()))) . ((QUOTE . ((LAMBDA . ((X . ()) . ((QUASIQUOTE . (((UNQUOTE . (X . ())) . ((QUOTE . ((UNQUOTE . (X . ())) . ())) . ())) . ())) . ()))) . ())) . ()))
+(QUOTE . (MOSHE . ()))
+(A . ((Z . (Y . (X . ()))) . (B . ())))
+(A . (Z . (Y . (X . (B . ())))))
+(A . (B . (C . ())))
+(1 . (B . ((X . (Y . (Z . ()))) . ())))
+(Q . (R . (1 . (2 . (S . (T . (X . (Y . (Z . ((U . (V . (W . ()))) . ()))))))))))
+2""", 'quasi-quoting'))
+
+
+tests.append(("""
+(apply (lambda (x) ((lambda (x) x) 5)) 3 '())
+(apply (lambda (x) ((lambda () x) )) 3 '())
+(apply cons 1 2 '())
+(apply cons '(1 2))
+(apply cons 1 '(2))
+(apply (lambda (x y) (apply cons x y '())) '(1 2))
+(apply + '(4 5))
+(apply vector 'a 'b '(c d e)) 
+(define first
+  (lambda (l)
+    (apply (lambda (x . y) x)
+             l)))
+(define rest
+  (lambda (l)
+    (apply (lambda (x . y) y) l)))
+(first '(a b c d))
+(rest '(a b c d)) 
+(apply (lambda (x .y) y) '(1))
+(apply (lambda x x) '())
+""", """5
+3
+(1 . 2)
+(1 . 2)
+(1 . 2)
+(1 . 2)
+9
+#5(A B C D E)
+A
+(B . (C . (D . ())))
+()
+()""", 'apply'))
+
+tests.append(("""
+(let ((this 'this) (is 'is) (silly 'silly)) (let ((f$ (lambda (f n k) (if (zero? n) (k 1) (f f (- n 1) (lambda (r) (k (* n r)))))))) `(,this ,is ,silly ,(f$ f$ 10 (lambda (x) x)))))
+""", """(THIS . (IS . (SILLY . (3628800 . ()))))""", 'this is silly'))
+
+
+tests.append(("""
+(append '(401) '(402))        
+(append '(400 401) '(402 403))   
+(cons (append '(1) '(2)) '(1))        
+(eq? (append '(1) '(2)) '(1))     
+(append '(a b c) '()) 
+(append '() '(a b c)) 
+(append '(a b) '(c d)) 
+(append '(a b) 'c) 
+(let ((x (list 'b)))
+  (eq? x (cdr (append '(a) x))))
+(eq? 'A (string->symbol "A"))
+;#t
+(eq? 'a (string->symbol "A"))    
+;#t
+(define lis (list 1 2 3))
+lis
+(define lis (cdr lis))
+lis
+
+(string->symbol "abc")
+;abc
+(eq? (string->symbol "A") 'a)
+;#t
+(eq? (string->symbol "A") 'A)
+;#t
+(eq? 'a 'A)
+;#t
+(symbol->string 'xyz)
+;"XYZ"
+(map + '(1 2) '(1 2) '(1 2))
+;(3 6)
+(map (lambda (x) (* x x))
+     '(1 -3 -5 7))
+(map cons '(a b c) '(1 2 3))
+((lambda (x) (x '(1 2))) car)
+""", """(401 . (402 . ()))
+(400 . (401 . (402 . (403 . ()))))
+((1 . (2 . ())) . (1 . ()))
+#f
+(A . (B . (C . ())))
+(A . (B . (C . ())))
+(A . (B . (C . (D . ()))))
+(A . (B . C))
+#t
+#t
+#t
+(1 . (2 . (3 . ())))
+(2 . (3 . ()))
+abc
+#t
+#t
+#t
+"XYZ"
+(3 . (6 . ()))
+(1 . (9 . (25 . (49 . ()))))
+((A . 1) . ((B . 2) . ((C . 3) . ())))
+1""", 'mix1'))
+
+tests.append(("""
+;line command
+'(1 2 #;3 4)
+'(((((((((1)) 2) 3) 4) 5) 6) 7 ) 8)
+'((1 . 2) ((3 . 4) 5))
+(define a #f)
+(if a 5)
+(define a 5)
+(cond ((null? 7) 7))
+(define (lvar . x) x)
+(define (lopt . (a . c)) c)
+(lvar)
+(lvar '())
+(lvar 1)
+(lvar 1 2 3 4 5)
+(lopt 1)
+(lopt 1 2 3 4 5)
+(lopt '(1 2 3) '(4 5 6) 7)
+(define lvar 7/55)
+(or #f (pair? '()) (boolean? 22) (char? "i am char!!!") (integer? '(1 2 3)) (null? '(1)) (procedure? lvar) (string? #\L) (symbol? "LVAR") (vector? #\K) 666)
+(and (or #f #f #t) (and 1 3 4) (or (or) (and)) #f)
+(define (a . (x)) x)
+(define b #f)
+(if (a #t) (or b b b 1 2) 666)
+((lambda (a b c) ((lambda (a b) a) 666 2)) 3 4 5)
+((lambda (a b . c) a) 1 2)
+((lambda (a b . c) b) 1 2)
+((lambda (a b . c) c) 1 2)
+((lambda (a b . c) a) 1 2 3 4 5)
+((lambda (a b . c) b) 1 2 3 4 5)
+((lambda (a b . c) c) 1 2 3 4 5)
+((lambda (a . c) c) 1 2 3 4 5 6 7 8 9 10)
+
+(let* ((x 1)
+       (y (+ x 1))
+       (z (lambda (x) (* x y))))
+    (list y x (z y)))
+
+(define prog  (lambda (a b c)
+        ((lambda (d e) 
+                ((lambda (f) 
+                        ((lambda (g h) 
+                                ((lambda (e) a)5)
+                        )
+                        7 8)
+                )
+                6)
+         )
+         4 5)
+)
+)
+
+(prog 1 2 3)
+(prog 4 5 6)
+(define a 3)
+(prog a 6 7)
+(define prog 7)
+prog
+""", """(1 . (2 . (4 . ())))
+(((((((((1 . ()) . ()) . (2 . ())) . (3 . ())) . (4 . ())) . (5 . ())) . (6 . ())) . (7 . ())) . (8 . ()))
+((1 . 2) . (((3 . 4) . (5 . ())) . ()))
+()
+(() . ())
+(1 . ())
+(1 . (2 . (3 . (4 . (5 . ())))))
+()
+(2 . (3 . (4 . (5 . ()))))
+((4 . (5 . (6 . ()))) . (7 . ()))
+666
+#f
+1
+666
+1
+2
+()
+1
+2
+(3 . (4 . (5 . ())))
+(2 . (3 . (4 . (5 . (6 . (7 . (8 . (9 . (10 . ())))))))))
+(2 . (1 . (4 . ())))
+1
+4
+3
+7""", 'mix2'))
+
+tests.append(("""
+(define accumulate 
+        (lambda (op initial sequence) 
+                (if (null? sequence) 
+                        initial 
+                        (op (car sequence) (accumulate op initial (cdr sequence))))))
+
+(define ls  '((1 2 3) (4 6 7) (8 9)))
+
+(accumulate append (list) (map (lambda (x) x) ls))
+
+(accumulate append (list) (map cdr ls))
+
+(define flatmap(lambda (proc seq) 
+ (accumulate append (list) (map proc seq)))) 
+
+(define (filter1 pred? lst)
+  (cond ((null? lst) (list ))
+        ((pred? (car lst)) (cons (car lst) (filter1 pred? (cdr lst))))
+        (else (filter1 pred? (cdr lst)))))
+
+ (flatmap (lambda (lst) (filter1 (lambda(x)  (= (remainder x 2) 1))  lst))  ls) 
+ 
+ (define id (lambda (x) x))
+ 
+ (define fib$ 
+        (lambda (n c) 
+                (cond ((= n 0) (c 0)) 
+                      ((= n 1) (c 1)) 
+                      (else (fib$ (- n 1) (lambda (fib-n-1) 
+                                                (fib$ (- n 2) (lambda (fib-n-2) 
+                                                                        (c (+ fib-n-1 fib-n-2)))))))))) 
+ (fib$ 7 id)
+ 
+ (define not1 
+        (lambda (x)
+                (if x 
+                    #f
+                    #t)))
+                    
+(define mul-list$ 
+        (lambda (ls succ fail) 
+                (cond ((null? ls) (succ 1)) 
+                      ((not1 (pair? ls)) (if (number? ls) (succ ls) (fail 'not-a-number!))) 
+                      (else (mul-list$ (car ls) 
+                                       (lambda (mul-car) 
+                                               (mul-list$ (cdr ls) 
+                                                           (lambda (mul-cdr) 
+                                                            (succ (* mul-car mul-cdr))) 
+                                                fail)) 
+                                         fail))))) 
+
+(mul-list$ (list 1 2 (list 3 4 5) (list 6 7 10)) (lambda (x) x) (lambda (x) x)) 
+
+(mul-list$ '(1 2 (3 4 5) (6 7 'a)) (lambda (x) x) (lambda (x) x))
+""", """(1 . (2 . (3 . (4 . (6 . (7 . (8 . (9 . ()))))))))
+(2 . (3 . (6 . (7 . (9 . ())))))
+(1 . (3 . (7 . (9 . ()))))
+13
+50400
+NOT-A-NUMBER!""", 'ppl'))
+
+tests.append(("""
+(eq? 'a 'a)
+(eq? "kobi" "kobi")
+(eq? 1/2 2/4)
+(eq? 5 5)
+(eq? '(a b c) (cdr '(a a b c)))
+(eq? '#('a) '#('a))
+(eq? #f #f)
+(eq? '() '())
+(eq? (if #f 1) (if #f 2))
+(eq? 'a 'ab)
+(eq? "kobi" "kkobi")
+(eq? 1/2 2/3)
+(eq? 5 5/1)
+(eq? 5 6)
+(eq? '(a b c) (cdr '(a b b c)))
+(eq? '#('a) '#('a 1))
+(eq? #f #t)
+(eq? '() '(a))
+(eq? (if #t 1) (if #f 2))
+
+(string-length "abqwedfghg")
+(string-length "")
+(vector-length '#(1 2 3 4 5 6 7 8 9 'a))
+(vector-length '#())
+(char->integer #\h)
+(char->integer (integer->char 101))
+
+(define x 5)
+(string->symbol "x")
+x
+'x
+(string->symbol "KObI")
+'KObI
+(eq? (string->symbol "a") 'a)
+(eq? (string->symbol "X") 'x)
+(eq? (string->symbol "kk") (string->symbol "kk"))
+
+(remainder 16 4)
+(remainder 5 2)
+(remainder -45 7)
+(remainder 10 -3)
+(remainder -17 -9)
+
+(vector-ref '#(a b c) 0)
+(vector-ref '#(a b c) 1)
+(vector-ref '#(x y z w) 3)
+(vector-ref '#(x y 77 w) 2)
+
+(make-vector 0)
+(make-vector 0 'a)
+(make-vector 5 'a)
+(make-vector 5 1)
+(make-vector 5)
+
+(= 1)
+(= 1/2 1/2)
+(= 2 4/2 8/4 16/8 32/16)
+(= 1/2 2/4 3/6 6/12)
+(= 1 2)
+(= 1 1/2)
+(= 1/2 1/4)
+(= 2 4/2 7/2 16/8 32/16)
+(= 1/2 2/3 3/6 6/12)
+
+(> 1/2)
+(> 4 3/2 1 1/2)
+(> 1 1/2 1/3 1/4 1/5 1/6 1/7)
+(> 4 5)
+(> 1 1/2 1/3 1/2 1/3)
+(> 1/3 1/4 1/4 1/5)
+(> 5 6/1)
+
+(< 1/2)
+(< 5 6 8/1 100/2)
+(< 3/2 3)
+(< 1 1/2 1/3 1/4 1/5 1/6 1/7)
+(< 14 5)
+(< 1 2 3 4 5 6 6/2)
+(< 1/3 1/4 1/4 1/5)
+""","""#t
+#t
+#t
+#t
+#t
+#t
+#t
+#t
+#t
+#f
+#f
+#f
+#f
+#f
+#f
+#f
+#f
+#f
+#f
+10
+0
+10
+0
+104
+101
+x
+5
+X
+KObI
+KOBI
+#f
+#t
+#t
+0
+1
+-3
+1
+-8
+A
+B
+W
+77
+#0()
+#0()
+#5(A A A A A)
+#5(1 1 1 1 1)
+#5(0 0 0 0 0)
+#t
+#t
+#t
+#t
+#f
+#f
+#f
+#f
+#f
+#t
+#t
+#t
+#f
+#f
+#f
+#f
+#t
+#t
+#t
+#f
+#f
+#f
+#f""", 'func'))
+
+tests.append(('Offical tests',))
+tests.append(("""
+#t
+#f
+'()
+""", """#t
+#f
+()""", 'file 1'))
+tests.append(("""
+(if #f #f #t)
+(if #t #t #f)
+""", """#t
+#t""", 'file 2'))
+tests.append(("""
+(or)
+(or #t)
+(or #f)
+(or #f #t)
+(or #f #f #f #f #f #t #f)
+(and)
+(and #t)
+(and #t #t)
+(and #t #f)
+(and #f #t)
+(and #t #t #t #t #t #t #t #f)
+""", """#f
+#t
+#f
+#t
+#t
+#t
+#t
+#t
+#f
+#f
+#f""", 'file 3'))
+tests.append((r"""
+1
+2
+3
+#\a
+#\A
+#\newline
+#\"
+#\\
+3/4
+4/5
+6/7
+'(1 2 3)
+'(1 . (2 . (3 . ())))
+'((1 2) (3 4))
+'1234
+'#\a
+""", r"""1
+2
+3
+#\a
+#\A
+#\newline
+#\"
+#\\
+3/4
+4/5
+6/7
+(1 . (2 . (3 . ())))
+(1 . (2 . (3 . ())))
+((1 . (2 . ())) . ((3 . (4 . ())) . ()))
+1234
+#\a""", 'file 4'))
+tests.append(("""
+(let ((x #f))
+  (let ()
+    x))
+
+(let ((x #f) (y #t))
+  (let ((x #f))
+    (let ((x #f) (z #f) (t #f))
+      (let ((x #f) (t #f))
+  y))))
+
+((((lambda (x)
+     (lambda (y)
+       y))
+   (lambda (p)
+     (p (lambda (x y)
+    (lambda (p)
+      (p y x))))))
+  (lambda (z) (z #t #f)))
+ (lambda (x y) x))
+
+((((lambda (x)
+     (lambda (y)
+       (x y)))
+   (lambda (p)
+     (p (lambda (x y)
+    (lambda (p)
+      (p y x))))))
+  (lambda (z) (z #t #f)))
+ (lambda (x y) x))
+
+((((lambda (x)
+     (lambda (y)
+       (x (x y))))
+   (lambda (p)
+     (p (lambda (x y)
+    (lambda (p)
+      (p y x))))))
+  (lambda (z) (z #t #f)))
+ (lambda (x y) x))
+
+(((((lambda (x) ((x x) (x x)))
+    (lambda (x)
+      (lambda (y)
+  (x (x y)))))
+   (lambda (p)
+     (p (lambda (x y)
+    (lambda (p)
+      (p y x))))))
+  (lambda (z) (z #t #f)))
+ (lambda (x y) x))
+""", """#f
+#t
+#t
+#f
+#t
+#t""", 'file 5'))
+tests.append(("""
+(let ()
+  ((lambda s
+     (let ()
+       ((lambda s s) s s s)))
+   #t))
+""", "((#t . ()) . ((#t . ()) . ((#t . ()) . ())))", 'file 6'))
+tests.append(("""
+(define test
+  (let ((p1 (lambda (x1 x2 x3 x4 x5 x6 x7 x8 x9 x10)
+	      (lambda (z)
+		(z x2 x3 x4 x5 x6 x7 x8 x9 x10 x1))))
+	(s '(a b c d e f g h i j)))
+    (lambda ()
+      (((((((((((apply p1 s) p1) p1) p1) p1) p1) p1) p1) p1) p1)
+	       list))))
+
+(test)
+""", "(A . (B . (C . (D . (E . (F . (G . (H . (I . (J . ()))))))))))", 'file 7'))
+tests.append(("""
+(((((lambda (x) (x (x x)))
+    (lambda (x)
+      (lambda (y)
+  (x (x y)))))
+   (lambda (p)
+     (p (lambda (x)
+    (lambda (y)
+      (lambda (z)
+        ((z y) x)))))))
+  (lambda (x)
+    ((x #t) #f)))
+ (lambda (x)
+   (lambda (y)
+     x)))
+""", "#t", 'file 8'))
+tests.append((r"""
+(boolean? #t)
+(boolean? #f)
+(boolean? 1234)
+(boolean? 'a)
+(symbol? 'b)
+(procedure? procedure?)
+(eq? (car '(a b c)) 'a)
+(= (car (cons 1 2)) 1)
+(integer? 1234)
+(char? #\a)
+(null? '())
+(string? "abc")
+(symbol? 'lambda)
+(vector? '#(1 2 3))
+(vector? 1234)
+(string? '#(a b c))
+(string? 1234)
+(= 3 (vector-length '#(a #t ())))
+(pair? '(a . b))
+(pair? '())
+(zero? 0)
+(zero? 234)
+(+ 2 2/3)
+(* 1/3 3/5 5/7)
+(+ 1/2 1/3)
+""", """#t
+#t
+#f
+#f
+#t
+#t
+#t
+#t
+#t
+#t
+#t
+#t
+#t
+#t
+#f
+#f
+#f
+#t
+#t
+#f
+#t
+#f
+8/3
+1/7
+5/6""", 'file 9'))
+tests.append(("""
+(define with (lambda (s f) (apply f s)))
+
+(define crazy-ack
+  (letrec ((ack3
+      (lambda (a b c)
+        (cond
+         ((and (zero? a) (zero? b)) (+ c 1))
+         ((and (zero? a) (zero? c)) (ack-x 0 (- b 1) 1))
+         ((zero? a) (ack-z 0 (- b 1) (ack-y 0 b (- c 1))))
+         ((and (zero? b) (zero? c)) (ack-x (- a 1) 1 0))
+         ((zero? b) (ack-z (- a 1) 1 (ack-y a 0 (- c 1))))
+         ((zero? c) (ack-x (- a 1) b (ack-y a (- b 1) 1)))
+         (else (ack-z (- a 1) b (ack-y a (- b 1) (ack-x a b (- c 1))))))))
+     (ack-x
+      (lambda (a . bcs)
+        (with bcs
+    (lambda (b c)
+      (ack3 a b c)))))
+     (ack-y
+      (lambda (a b . cs)
+        (with cs
+    (lambda (c)
+      (ack3 a b c)))))
+     (ack-z
+      (lambda abcs
+        (with abcs
+    (lambda (a b c)
+      (ack3 a b c))))))
+    (lambda ()
+      (and (= 7 (ack3 0 2 2))
+           (= 61 (ack3 0 3 3))
+           (= 316 (ack3 1 1 5))
+           (= 636 (ack3 2 0 1))
+     ))))
+
+(crazy-ack)
+""", "#t", 'file 10'))
+tests.append(("""
+(define fact
+  (lambda (n)
+    (if (zero? n)
+      1
+      (* n (fact (- n 1)))
+    )
+  )
+)
+
+(fact 5)
+""", "120", 'file 11'))
+tests.append(("""
+(letrec ((fact-1
+    (lambda (n)
+      (if (zero? n)
+    1
+    (* n (fact-2 (- n 1))))))
+   (fact-2
+    (lambda (n)
+      (if (zero? n)
+    1
+    (* n (fact-3 (- n 1))))))
+   (fact-3
+    (lambda (n)
+      (if (zero? n)
+    1
+    (* n (fact-4 (- n 1))))))
+   (fact-4
+    (lambda (n)
+      (if (zero? n)
+    1
+    (* n (fact-5 (- n 1))))))
+   (fact-5
+    (lambda (n)
+      (if (zero? n)
+    1
+    (* n (fact-1 (- n 1)))))))
+  (fact-1 10))
+""", "3628800", 'file 12'))
+
 
 if (hasattr(args, 'code')) and args.code:
   tests = []
