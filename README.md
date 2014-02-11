@@ -4,5 +4,20 @@ Usage
 -----
 Copy _tester.py_ to project folder and execute
 ```
-python3 tester.py [all|skip|only] 
+python3 tester.py [-h] [-c CODE] {all,skip,only} 
 ```
+Optional arguments:
+  -h, --help            show help message and exit
+  -c CODE, --code CODE  Compile code directly
+
+subcommands:
+  valid subcommands
+
+  {all,skip,only}       additional help
+    all                 Run all tests (default)
+    skip                Skip sections of tests or specific tests
+    only                Run specific sections of tests or specific tests
+
+  Both *skip* and *only* expect one of the following flags:
+    -s NUM              Number of section to skip/execute
+    -t num              Number of test to skip/execute
