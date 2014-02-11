@@ -1,29 +1,132 @@
-from compiler import *
+
+m compiler import *
 from subprocess import *
 from datetime import *
 from argparse import *
 import os
 
-parser = ArgumentParser()
 
-subparsers = parser.add_subparsers(title='subcommands', description='valid subcommands', help='additional help')
-parser.add_argument("-c", "--code", help="Compile this code directly", type=str, default="")
 
-all_parser = subparsers.add_parser('all', help='Run all tests')
-skip_parser = subparsers.add_parser('skip', help='Skip sections of tests or specific tests')
-only_parser = subparsers.add_parser('only', help='Run specific sections of tests or specific tests')
+def main(tests):
+  parser = ArgumentParser()
+  
+  subparsers = parser.add_subparsers(title='subcommands', description='valid subcommands', help='additional help')
+  parser.add_argument("-c", "--code", help="Compile this code directly", type=str, default="")
+  
+  all_parser = subparsers.add_parser('all', help='Run all tests')
+  skip_parser = subparsers.add_parser('skip', help='Skip sections of tests or specific tests')
+  only_parser = subparsers.add_parser('only', help='Run specific sections of tests or specific tests')
+  
+  skip_parser.add_argument("-s", "--skip-sections", help="Skip these tests sections", type=int, nargs='*', default=[])
+  skip_parser.add_argument("-t", "--skip-tests", help="Skip these (specific) tests", type=int, nargs='*', default=[])
+  
+  only_parser.add_argument("-s", "--only-sections", help="Only run these test sections", type=int, nargs='*', default=[])
+  only_parser.add_argument("-t", "--only-tests", help="Only run these tests", type=int, nargs='*', default=[])
+  
+  args = parser.parse_args()
+  
+  tmpSourceFile = 'tester_tmp.scm'
+  srcNoExt = tmpSourceFile.replace('.scm', '')
+  tmpTargetFile = 'tester_tmp.asm'
+  if (hasattr(args, 'code')) and args.code:
+    tests = []
+    tests.append(('manual code execution',))
+    tests.append((args.code, 'something', 'Manual Code'))
+  
+  start_time = datetime.now()
+  testsCount = 0
+  skippedTestsCount = 0
+  failedTestsCount = 0
+  testsSectionsCount = 0
+  failedTestsSummary = []
+  
+  test = 0
+  section = 0
+  for t in tests:
+    if (len(t) == 1):
+      testsSectionsCount += 1
+      section = testsSectionsCount
+      print('----------------')
+      print("[%d] %s" % (section, t[0]), end="")
+      if (hasattr(args, 'skip_sections') and section in args.skip_sections)\
+          or (hasattr(args, 'only_sections') and not section in args.only_sections):
+        print(' (skipped)')
+      else:
+        print()
+  
+      print('----------------')
+      continue
+  
+    testsCount += 1
+    test = testsCount
+  
+    if (hasattr(args, 'skip_sections') and section in args.skip_sections)\
+        or (hasattr(args, 'only_sections') and\
+            not section in args.only_sections and\
+            not test in args.only_tests):
+      skippedTestsCount += 1
+      continue
+  
+    scheme_code = t[0]
+    expected_output = t[1]
+    test_description = t[2]
+  
+    print("%d. %s => " % (test, test_description), end="")
+  
+    if (hasattr(args, 'skip_tests') and test in args.skip_tests)\
+        or (hasattr(args, 'only_tests') and\
+            not section in args.only_sections and\
+            not test in args.only_tests):
+      print("Skipped")
+      continue
+  
+    with open(tmpSourceFile, 'w') as fd:
+      fd.write(scheme_code)
+  
+    compile_scheme_file(tmpSourceFile, tmpTargetFile)
+    output = getoutput('make ' + srcNoExt + ' > /dev/null && ./' + srcNoExt)
+  
+    if type(expected_output) is list and str(output).lower() in expected_output \
+    			or str(output).lower() == str(expected_output).lower():
+      print("Success")
+    else:
+      failedTestStr = "%d. Test: %s\nGot:\n%s\nExpected:\n%s" % (test, scheme_code, output, expected_output)
+      failedTestsSummary.append(failedTestStr)
+      print("Failed!\n" + failedTestStr)
+      print("(python3 tester_official.py only -t %d to re-run specific test)" % (test))
+      failedTestsCount += 1
+  
+  end_time = datetime.now()
+  
+  print()
+  
+  if failedTestsCount == 0:
+    print("All tests passed!", end="")
+  else:
+    print("%d tests failed. (out of %d)" % (failedTestsCount, testsCount), end="")
+  
+  if skippedTestsCount > 0:
+    print(" (%d skipped)" % (skippedTestsCount))
+  else:
+    print()
+  
+  if failedTestsCount != 0:
+    print("Failed tests summary:")
+    for summary in failedTestsSummary:
+      print(summary)
+    print("('python3 tester_official.py only -t test_id' to re-run specific test)")
+  
+  execution_time = end_time - start_time
+  print("Executed in %d seconds." % (execution_time.total_seconds()))
+  
+  try:
+    os.remove(tmpSourceFile)
+    os.remove(tmpTargetFile)
+    os.remove(srcNoExt)
+  except OSError:
+    pass
 
-skip_parser.add_argument("-s", "--skip-sections", help="Skip these tests sections", type=int, nargs='*', default=[])
-skip_parser.add_argument("-t", "--skip-tests", help="Skip these (specific) tests", type=int, nargs='*', default=[])
 
-only_parser.add_argument("-s", "--only-sections", help="Only run these test sections", type=int, nargs='*', default=[])
-only_parser.add_argument("-t", "--only-tests", help="Only run these tests", type=int, nargs='*', default=[])
-
-args = parser.parse_args()
-
-tmpSourceFile = 'tester_tmp.scm'
-srcNoExt = tmpSourceFile.replace('.scm', '')
-tmpTargetFile = 'tester_tmp.asm'
 
 tests = []
 #tests.append(('ApplicTP - will cause an infinite loop that doesn\'t crash',))
@@ -1184,100 +1287,5 @@ tests.append(("""
 """, "3628800", 'file 12'))
 
 
-if (hasattr(args, 'code')) and args.code:
-  tests = []
-  tests.append(('manual code execution',))
-  tests.append((args.code, 'something', 'Manual Code'))
-
-start_time = datetime.now()
-testsCount = 0
-skippedTestsCount = 0
-failedTestsCount = 0
-testsSectionsCount = 0
-failedTestsSummary = []
-
-test = 0
-section = 0
-for t in tests:
-  if (len(t) == 1):
-    testsSectionsCount += 1
-    section = testsSectionsCount
-    print('----------------')
-    print("[%d] %s" % (section, t[0]), end="")
-    if (hasattr(args, 'skip_sections') and section in args.skip_sections)\
-        or (hasattr(args, 'only_sections') and not section in args.only_sections):
-      print(' (skipped)')
-    else:
-      print()
-
-    print('----------------')
-    continue
-
-  testsCount += 1
-  test = testsCount
-
-  if (hasattr(args, 'skip_sections') and section in args.skip_sections)\
-      or (hasattr(args, 'only_sections') and\
-          not section in args.only_sections and\
-          not test in args.only_tests):
-    skippedTestsCount += 1
-    continue
-
-  scheme_code = t[0]
-  expected_output = t[1]
-  test_description = t[2]
-
-  print("%d. %s => " % (test, test_description), end="")
-
-  if (hasattr(args, 'skip_tests') and test in args.skip_tests)\
-      or (hasattr(args, 'only_tests') and\
-          not section in args.only_sections and\
-          not test in args.only_tests):
-    print("Skipped")
-    continue
-
-  with open(tmpSourceFile, 'w') as fd:
-    fd.write(scheme_code)
-
-  compile_scheme_file(tmpSourceFile, tmpTargetFile)
-  output = getoutput('make ' + srcNoExt + ' > /dev/null && ./' + srcNoExt)
-
-  if type(expected_output) is list and str(output).lower() in expected_output \
-  			or str(output).lower() == str(expected_output).lower():
-    print("Success")
-  else:
-    failedTestStr = "%d. Test: %s\nGot:\n%s\nExpected:\n%s" % (test, scheme_code, output, expected_output)
-    failedTestsSummary.append(failedTestStr)
-    print("Failed!\n" + failedTestStr)
-    print("(python3 tester_official.py only -t %d to re-run specific test)" % (test))
-    failedTestsCount += 1
-
-end_time = datetime.now()
-
-print()
-
-if failedTestsCount == 0:
-  print("All tests passed!", end="")
-else:
-  print("%d tests failed. (out of %d)" % (failedTestsCount, testsCount), end="")
-
-if skippedTestsCount > 0:
-  print(" (%d skipped)" % (skippedTestsCount))
-else:
-  print()
-
-if failedTestsCount != 0:
-  print("Failed tests summary:")
-  for summary in failedTestsSummary:
-    print(summary)
-  print("('python3 tester_official.py only -t test_id' to re-run specific test)")
-
-execution_time = end_time - start_time
-print("Executed in %d seconds." % (execution_time.total_seconds()))
-
-try:
-  os.remove(tmpSourceFile)
-  os.remove(tmpTargetFile)
-  os.remove(srcNoExt)
-except OSError:
-  pass
+if __name__ == "__main__":
+	main(tests)
