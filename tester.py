@@ -1,5 +1,4 @@
-
-m compiler import *
+from compiler import *
 from subprocess import *
 from datetime import *
 from argparse import *
@@ -140,6 +139,7 @@ tests.append(("(append '(1 2) '(3 4) (list 5 6))", "(1 . (2 . (3 . (4 . (5 . (6 
 tests.append(("(append 5)", "5", 'append with one, non-list arg'))
 tests.append(("(append '() 5)", "5", 'creating improper list with append'))
 tests.append(("(append '(1 2) 5)", "(1 . (2 . 5))", 'creating improper list with append'))
+tests.append(("(append '(401) '(402))", "(401 . (402 . ()))", 'append two quoted lists'))
 
 tests.append(('apply',))
 tests.append(("(apply + '(3 4 5 6))", "18", 'apply on + and a const list'))
