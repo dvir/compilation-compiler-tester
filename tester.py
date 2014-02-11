@@ -131,6 +131,7 @@ tests = []
 #tests.append(('ApplicTP - will cause an infinite loop that doesn\'t crash',))
 #tests.append(("((lambda (x) (x x)) (lambda (x) (x x)))", 'infinite loop', 'ApplicTP frame replacement'))
 
+#1
 tests.append(('append',))
 tests.append(("(append)", "()", 'append with no args'))
 tests.append(("(append '(1 2))", "(1 . (2 . ()))", 'append with one constant list arg'))
@@ -141,9 +142,15 @@ tests.append(("(append '() 5)", "5", 'creating improper list with append'))
 tests.append(("(append '(1 2) 5)", "(1 . (2 . 5))", 'creating improper list with append'))
 tests.append(("(append '(401) '(402))", "(401 . (402 . ()))", 'append two quoted lists'))
 
+#2
 tests.append(('apply',))
 tests.append(("(apply + '(3 4 5 6))", "18", 'apply on + and a const list'))
 tests.append(("(apply append '((1 2) (3 4)))", "(1 . (2 . (3 . (4 . ()))))", 'apply on append and multiple lists'))
+tests.append(("(apply cons 1 2 '())", "(1 . 2)", 'apply cons on args and nil list'))
+tests.append(("(apply cons 1 '(2))", "(1 . 2)", 'apply cons on an arg and non empty list'))
+tests.append(("(apply (lambda (x) ((lambda (x) x) 5)) 3 '())", '5', 'apply a nested lamda'))
+tests.append(("(apply (lambda (x) ((lambda () x) )) 3 '())", '3', 'apply a nested lamda'))
+tests.append(("(apply (lambda (x y) (apply cons x y '())) '(1 2))", "(1 . 2)", 'apply a nested apply'))
 
 tests.append(('map',))
 tests.append(("(map (lambda (x . z) (+ x 10)) '(1 2 3))", "(11 . (12 . (13 . ())))", 'map on a lambda-opt'))
