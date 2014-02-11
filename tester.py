@@ -176,6 +176,7 @@ tests.append(("((lambda (x) x) 5)", '5', 'identity lambda on integer'))
 tests.append(("(((lambda () (lambda () 1337))))", '1337', 'nested lambda simple'))
 tests.append(("(((lambda () (lambda () (if 1 2 3 ) ))))", '2', 'nested lambda simple with if'))
 tests.append(("(if #t ((lambda (x y) x) 404 1667) )", '404', 'lambda in if'))
+tests.append(("(if #t ((lambda (x y) y) 1337 202) )", '202', 'lambda in if with two params'))
 
 #6
 tests.append(('lambda-opt',))
