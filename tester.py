@@ -162,16 +162,19 @@ tests.append(("(map + '(1 2 3) '(2 4 6) '(5 10 15))", "(8 . (16 . (24 . ())))", 
 tests.append(("(map cons '(13 40) '(37 4))", "((13 . 37) . ((40 . 4) . ()))", 'map on cons'))
 tests.append(("(map (lambda (x) (map zero? x)) '((1)))", "((#f . ()) . ())", 'nested nasty map'))
 
-
+#4
 tests.append(('multiple expressions',))
 tests.append(("(define x 10)", "", 'don\'t print #void'))
 tests.append(("(define x 5) x", "5", 'multiple expressions with define'))
 tests.append(("(define x 5) (define x 6) x", "6", 'multiple expressions with define overwriting'))
 tests.append(("6 5", "6\n5", 'multiple expressions in different lines'))
 
+#5
 tests.append(('lambda-simple',))
+tests.append(("((lambda () 404))", '404', 'lambda simple with no args'))
 tests.append(("((lambda (x) x) 5)", '5', 'identity lambda on integer'))
 
+#6
 tests.append(('lambda-opt',))
 tests.append(("((lambda (x . y) y) 1)", '()', 'lambda opt with one arg'))
 tests.append(("((lambda (x . y) y) 1 2)", '(2 . ())', 'lambda opt with multiple args'))
