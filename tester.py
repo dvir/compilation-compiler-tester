@@ -152,12 +152,16 @@ tests.append(("(apply (lambda (x) ((lambda (x) x) 5)) 3 '())", '5', 'apply a nes
 tests.append(("(apply (lambda (x) ((lambda () x) )) 3 '())", '3', 'apply a nested lamda'))
 tests.append(("(apply (lambda (x y) (apply cons x y '())) '(1 2))", "(1 . 2)", 'apply a nested apply'))
 
+#3
 tests.append(('map',))
 tests.append(("(map (lambda (x . z) (+ x 10)) '(1 2 3))", "(11 . (12 . (13 . ())))", 'map on a lambda-opt'))
 tests.append(("(map (lambda x x) '(1))", "((1 . ()) . ())", 'map on a lambda-var'))
 tests.append(("(map (lambda (x) x) '(1))", "(1 . ())", 'map on a lambda-simple'))
 tests.append(("(map (lambda (x y) (- x y)) '(1) '(2))", "(-1 . ())", 'map on a lambda-simple with two arg lists'))
 tests.append(("(map + '(1 2 3) '(2 4 6) '(5 10 15))", "(8 . (16 . (24 . ())))", 'map on a lambda-simple with three arg lists'))
+tests.append(("(map cons '(13 40) '(37 4))", "((13 . 37) . ((40 . 4) . ()))", 'map on cons'))
+tests.append(("(map (lambda (x) (map zero? x)) '((1)))", "((#f . ()) . ())", 'nested nasty map'))
+
 
 tests.append(('multiple expressions',))
 tests.append(("(define x 10)", "", 'don\'t print #void'))
