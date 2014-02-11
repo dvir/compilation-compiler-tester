@@ -284,6 +284,7 @@ tests.append(("(eq? '() (cdr '(5)))", '#t', 'cdr of a one-element list should be
 tests.append(("(eq? 0 0)", '#t', 'eq of two integers'))
 tests.append(("(eq? #f #f)", '#t', 'eq of two booleans'))
 tests.append(("(eq? 1/2 1/2)", '#t', 'eq of two fractions'))
+tests.append(("(eq? 68/55 (+ 3/5 7/11))", '#t', 'eq of two fractions'))
 tests.append(("(eq? '(1 2) '(1 2))", '#t', 'eq of two constant lists'))
 tests.append(("(eq? (list 1 2) (list 1 2))", '#f', 'eq of two dynamic lists'))
 tests.append(("(eq? car car)", '#t', 'eq of two (same) procedures'))
