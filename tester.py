@@ -11,6 +11,7 @@ def main(tests):
   
   subparsers = parser.add_subparsers(title='subcommands', description='valid subcommands', help='additional help')
   parser.add_argument("-c", "--code", help="Compile this code directly", type=str, default="")
+  parser.add_argument("-l", "--list", help="Show a list of available sections", action="store_true")
   
   all_parser = subparsers.add_parser('all', help='Run all tests')
   skip_parser = subparsers.add_parser('skip', help='Skip sections of tests or specific tests')
@@ -23,6 +24,13 @@ def main(tests):
   only_parser.add_argument("-t", "--only-tests", help="Only run these tests", type=int, nargs='*', default=[])
   
   args = parser.parse_args()
+
+  if args.list:
+    sections = filter(lambda x: len(x) == 1, tests)
+    for i, j in enumerate(sections):
+      print("{0: 3} - {1}".format(i + 1, j[0]))
+
+    return
   
   tmpSourceFile = 'tester_tmp.scm'
   srcNoExt = tmpSourceFile.replace('.scm', '')
