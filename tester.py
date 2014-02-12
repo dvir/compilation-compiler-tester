@@ -213,6 +213,15 @@ tests.append(('un-quoting',))
 tests.append(("(append '(1 2) `,'(3))", "(1 . (2 . (3 . ())))", 'un-quoting and appending a list'))
 tests.append(("(append '(1) `(2 ,@'(3 4)))", "(1 . (2 . (3 . (4 . ()))))", 'un-quoting and appending a list'))
 
+tests.append(("quasi-quote",))
+tests.append(("`#(1 2 3)",'#3(1 2 3)','qq list->vector'))
+tests.append(("`#(+ 1 2)",'#3(+ 1 2)','qq list->vector'))
+tests.append(("`(,@(+ 3 3))",'6','qq + un-quoting+application'))
+tests.append(("(symbol? (vector-ref `#(+ 1 2) 0))",'#t','qq make sure we create a symbol'))
+tests.append(("`#(10 5 ,(+ 4) ,@(map + '(16 9)) 8)",'#6(10 5 4 16 9 8)','qq - advanced list->vector'))
+
+
+
 ### or
 tests.append(('or',))
 tests.append(("(or)", '#f', 'or with no params'))
