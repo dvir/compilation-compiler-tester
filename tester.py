@@ -139,10 +139,6 @@ tests = []
 #tests.append(('ApplicTP - will cause an infinite loop that doesn\'t crash',))
 #tests.append(("((lambda (x) (x x)) (lambda (x) (x x)))", 'infinite loop', 'ApplicTP frame replacement'))
 
-tests.append(('unicode',))
-tests.append((r"#\א", r"#\א", 'print a Hebrew character'))
-tests.append((r"#\lambda", r"#\λ", 'print the lambda character'))
-
 ### append
 tests.append(('append',))
 tests.append(("(append)", "()", 'append with no args'))
