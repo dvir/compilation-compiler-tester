@@ -139,6 +139,9 @@ tests = []
 #tests.append(('ApplicTP - will cause an infinite loop that doesn\'t crash',))
 #tests.append(("((lambda (x) (x x)) (lambda (x) (x x)))", 'infinite loop', 'ApplicTP frame replacement'))
 
+
+tests.append(('check we turn the currect int for #\\lambda',))
+tests.append((r"(char->integer #\lambda)", "955", 'check the int of lambda'))
 ### append
 tests.append(('append',))
 tests.append(("(append)", "()", 'append with no args'))
