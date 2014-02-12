@@ -142,15 +142,6 @@ tests = []
 tests.append(('unicode',))
 tests.append((r"#\א", r"#\א", 'print a Hebrew character'))
 tests.append((r"#\lambda", r"#\λ", 'print the lambda character'))
-tests.append((r"#\x03bb", r"#\λ", 'Hexadecimal chars'))
-tests.append((r"#\x05D0", r"#\א", 'Hexadecimal chars'))
-
-tests.append((r"#\xFDFA", r"#\ﷺ", 'Hexadecimal chars'))
-tests.append((r"#\ༀ", r"#\ༀ", 'Visible chars'))
-tests.append((r"#\☺", r"#\☺", 'Visible chars'))
-
-tests.append((r"#\M", r"#\M", 'Visible chars'))
-tests.append((r"#\?", r"#\?", 'Visible chars'))
 
 ### append
 tests.append(('append',))
