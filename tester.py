@@ -152,6 +152,10 @@ tests.append((r"#\☺", r"#\☺", 'Visible chars'))
 tests.append((r"#\M", r"#\M", 'Visible chars'))
 tests.append((r"#\?", r"#\?", 'Visible chars'))
 
+###The biggest we can handle
+tests.append((r"#\xFFFF", r"#\￿", 'The biggest UTF-8 symbol we can handle, 4 hex digits.'))
+
+
 ### append
 tests.append(('append',))
 tests.append(("(append)", "()", 'append with no args'))
